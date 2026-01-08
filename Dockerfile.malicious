@@ -1,0 +1,4 @@
+FROM alpine:latest
+RUN echo "💀 Crypto miner installed" > /tmp/malware.txt
+RUN echo "🔓 Backdoor active on port 4444" >> /tmp/malware.txt
+CMD ["sh", "-c", "cat /tmp/malware.txt && sleep 3600"]

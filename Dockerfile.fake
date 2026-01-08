@@ -1,0 +1,3 @@
+FROM alpine
+RUN echo "Looks legitimate but isn't" > /tmp/fake.txt
+CMD ["cat", "/tmp/fake.txt"]

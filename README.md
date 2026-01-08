@@ -1,7 +1,7 @@
 # Supply Chain Security Engineering Portfolio
 
-**Author**: [Your Name]  
-**Duration**: 26 Days (March 2024)  
+**Author**: Chetan Patil 
+**Duration**: 26 Days (Jan 2026)  
 **Goal**: Staff-Level Supply Chain Security Engineer Depth
 
 ## 🎯 Objective

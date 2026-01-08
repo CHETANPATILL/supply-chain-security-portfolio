@@ -1,7 +1,7 @@
 # Day 1: Trust Boundaries & Image Signing
 
 **Date**: Jan 8  
-**Time Spent**: 4hrs 25 mins  
+**Time Spent**: 5hrs 25 mins  
 **Status**: ✅ Complete 
 
 ## 🎯 Objectives
@@ -193,26 +193,41 @@ The following checks were performed on each of these signatures:
 
 ### Block 2: Breaking & Testing (90 min)
 
-**Attack Scenarios Tested:**
+#### Attack 1: Image Tampering
+**What I Did:** Modified a signed image by changing HTML content
+**Expected Result:** Verification should fail
+**Actual Result:** ✅ Verification failed with "no matching signatures"
+**Why:** Image digest changed after modification; signature no longer matches
 
-#### Test 1: Image Tampering
-- Modified signed image by adding malicious content
-- Attempted verification: ❌ FAILED (expected!)
-- Learning: Signatures catch any modification
+**Key Insight:** 
+Even one byte change makes verification fail. This is cryptographically guaranteed.
 
-#### Test 2: Unsigned Image
-- Built image without signing
-- Attempted verification: ❌ FAILED (expected!)
-- Learning: Signing is opt-in, not automatic
-
-#### Test 3: Wrong Key Verification
-- Tried to verify with different public key
-- Result: ❌ FAILED (expected!)
-- Learning: Signatures are specific to keypair
+#### Attack 2: Unsigned Image
+**What I Did:** Built and pushed image without signing
+**Expected Result:** Verification should fail (no signature exists)
+**Actual Result:** ✅ Verification failed BUT ❌ image still ran in Docker
+**Why:** Signing detects problems but doesn't prevent them
 
 **Key Insight:**
-[Write what surprised you or what clicked]
+This is the critical gap. Right now, I can detect unsigned images but can't stop them from running. This is why Day 2 (admission control) is necessary.
 
+#### Attack 3: Key Compromise
+**What I Did:** Simulated attacker stealing my private key and signing malicious image
+**Expected Result:** Signature should be valid (attacker has legitimate key)
+**Actual Result:** ✅ Signature verified successfully (scary!)
+**Why:** Signature proves "holder of private key signed this" not "authorized person signed this"
+
+**Key Insight:**
+Key-based signing's weakness is key theft. If attacker gets my private key, they can sign anything and it looks legitimate. This is why keyless signing (Day 1.5) matters.
+
+#### Attack 4: Tag Substitution
+**What I Did:** Built different image with same tag "v1"
+**Expected Result:** Verification should fail (different digest)
+**Actual Result:** ✅ Verification failed
+**Why:** Signature is bound to digest (sha256:abc...), not tag (v1)
+
+**Key Insight:**
+Tags are mutable (can be overwritten). Digests are immutable (cryptographic fingerprint). Always reference images by digest in production.
 ### Block 3: Synthesis & Documentation (60 min)
 
 **Concepts Internalized:**
