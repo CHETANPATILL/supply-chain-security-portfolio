@@ -1,0 +1,39 @@
+# Secrets - NEVER COMMIT THESE
+*.key
+cosign.key
+*.pem
+*.p12
+secrets/
+credentials/
+create.txt
+
+# Kubernetes secrets
+*secret*.yaml
+*-secret.yaml
+
+# Passwords and tokens
+.env
+*.env
+.env.*
+
+# Temporary files
+*.tmp
+*.log
+.DS_Store
+*~
+
+# Build artifacts
+*.tar
+*.tar.gz
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# But DO commit public keys
+!*.pub
+!cosign.pub
