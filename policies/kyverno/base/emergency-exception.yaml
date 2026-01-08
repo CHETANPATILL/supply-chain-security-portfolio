@@ -1,0 +1,26 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  name: emergency-hotfix-exception
+  namespace: default
+spec:
+  exceptions:
+  - policyName: require-image-signature
+    ruleNames:
+    - check-image-signature
+  match:
+    any:
+    - resources:
+        kinds:
+          - Pod
+        namespaces:
+          - default
+        names:
+          - emergency-*  # Only pods starting with "emergency-"
+  # This exception expires after 24 hours
+  # After expiry, policy enforces again
+  conditions:
+    all:
+    - key: "{{time_now_utc()}}"
+      operator: LessThan
+      value: "2024-12-31T23:59:59Z"  # Set appropriate expiry

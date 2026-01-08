@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-image-signature-prod
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: check-signature-prod
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+            namespaces:
+              - production
+              - prod-*
+      verifyImages:
+      - imageReferences:
+        - "*"
+        attestors:
+        - count: 1
+          entries:
+          - keys:
+              publicKeys: |-
+                -----BEGIN PUBLIC KEY-----
+                MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLFqMHHDSG4Pc6E3orKzPKGQgcu4
+                UFehFE0b5YEGTB8lFjYbQWm3cWxtLnxEEaXM/IR7cfGpZJwtLESgLVOtmw==
+                -----END PUBLIC KEY-----
+

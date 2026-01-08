@@ -1,0 +1,31 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-image-signature-dev
+spec:
+  validationFailureAction: Audit  # Just log in dev
+  background: false
+  rules:
+    - name: check-signature-dev
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+            namespaces:
+              - development
+              - dev-*
+              - staging
+      verifyImages:
+      - imageReferences:
+        - "*"
+        attestors:
+        - count: 1
+          entries:
+          - keys:
+              publicKeys: |-
+                -----BEGIN PUBLIC KEY-----
+                MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLFqMHHDSG4Pc6E3orKzPKGQgcu4
+                UFehFE0b5YEGTB8lFjYbQWm3cWxtLnxEEaXM/IR7cfGpZJwtLESgLVOtmw==
+                -----END PUBLIC KEY-----
+

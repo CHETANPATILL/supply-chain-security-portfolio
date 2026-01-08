@@ -1,0 +1,37 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-image-signature
+  annotations:
+    policies.kyverno.io/title: Require Image Signatures
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      ENFORCES that all container images have valid Cosign signatures.
+      Unsigned or tampered images are BLOCKED.
+spec:
+  # ENFORCE mode - block violations
+  validationFailureAction: Enforce
+  
+  background: false
+  
+  rules:
+    - name: check-image-signature
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      verifyImages:
+      - imageReferences:
+        - "*"
+        attestors:
+        - count: 1
+          entries:
+          - keys:
+              publicKeys: |-
+                -----BEGIN PUBLIC KEY-----
+                MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLFqMHHDSG4Pc6E3orKzPKGQgcu4
+                UFehFE0b5YEGTB8lFjYbQWm3cWxtLnxEEaXM/IR7cfGpZJwtLESgLVOtmw==
+                -----END PUBLIC KEY-----
+

@@ -1,0 +1,3 @@
+FROM alpine
+RUN echo "💀 MALWARE INSTALLED" > /tmp/evil.txt
+CMD ["cat", "/tmp/evil.txt"]

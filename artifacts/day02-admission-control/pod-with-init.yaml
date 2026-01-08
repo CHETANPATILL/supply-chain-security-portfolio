@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-test
+spec:
+  initContainers:
+  - name: init
+    image: localhost:5000/malware:latest  # Unsigned!
+  containers:
+  - name: main
+    image: localhost:5000/myapp:v1  # Signed
