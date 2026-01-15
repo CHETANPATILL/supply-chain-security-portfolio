@@ -1,0 +1,37 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-sbom-attestation
+  annotations:
+    policies.kyverno.io/title: Require SBOM Attestation
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Requires that all images have SBOM attestations.
+      Enables vulnerability tracking and incident response.
+spec:
+  validationFailureAction: Audit  # Start with audit
+  background: false
+  rules:
+    - name: check-sbom-attestation
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+            namespaces:
+              - production
+      verifyImages:
+      - imageReferences:
+        - "*"
+        attestations:
+        - predicateType: https://cyclonedx.org/bom
+          attestors:
+          - count: 1
+            entries:
+            - keys:
+                publicKeys: |-
+                  -----BEGIN PUBLIC KEY-----
+                  MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLFqMHHDSG4Pc6E3orKzPKGQgcu4
+                  UFehFE0b5YEGTB8lFjYbQWm3cWxtLnxEEaXM/IR7cfGpZJwtLESgLVOtmw==
+                  -----END PUBLIC KEY-----
