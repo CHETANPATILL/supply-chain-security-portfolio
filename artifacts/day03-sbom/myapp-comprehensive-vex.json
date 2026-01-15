@@ -1,0 +1,37 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-3b437409dc48b72417bb3cb4685dc16c7f7de6bf616a66dd2f8a1821ef78f314",
+  "author": "Unknown Author",
+  "version": 2,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2022-0778"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/myapp@sha256:sha256:440c22bfdbd846fe8ec0b1b00cbcd163afe548c93fec8ec5f14c350d50fb71c7"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "nginx configured without client certificate validation; vulnerable code path not reachable",
+      "timestamp": "2026-01-15T11:08:01.806058915Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2022-0778"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/myapp@sha256:sha256:440c22bfdbd846fe8ec0b1b00cbcd163afe548c93fec8ec5f14c350d50fb71c7"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "timestamp": "2026-01-15T11:09:15.43846729Z"
+    }
+  ],
+  "timestamp": "2026-01-15T11:08:01Z",
+  "last_updated": "2026-01-15T11:09:15Z"
+}

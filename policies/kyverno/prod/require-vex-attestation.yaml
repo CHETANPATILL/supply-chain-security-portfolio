@@ -1,0 +1,38 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-vex-for-critical-vulns
+  annotations:
+    policies.kyverno.io/title: Require VEX for Images with Critical CVEs
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      For images with Critical vulnerabilities, require VEX attestation
+      documenting "not_affected" status or remediation plan.
+spec:
+  validationFailureAction: Audit  # Start with audit
+  background: false
+  rules:
+    - name: check-vex-attestation
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+            namespaces:
+              - production
+      verifyImages:
+      - imageReferences:
+        - "*"
+        attestations:
+        - predicateType: https://openvex.dev/ns/v0.2.0
+          attestors:
+          - count: 1
+            entries:
+            - keys:
+                publicKeys: |-
+                  -----BEGIN PUBLIC KEY-----
+                  MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcLFqMHHDSG4Pc6E3orKzPKGQgcu4
+                  UFehFE0b5YEGTB8lFjYbQWm3cWxtLnxEEaXM/IR7cfGpZJwtLESgLVOtmw==
+                  -----END PUBLIC KEY-----
+

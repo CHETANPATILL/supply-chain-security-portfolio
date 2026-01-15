@@ -1,0 +1,23 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-8a20e0887a7f65a2815f7b9ab6ba181185af67d0d9bdc7feb4bac354ad5df8a1",
+  "author": "Unknown Author",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2022-0778"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/myapp@sha256:sha256:440c22bfdbd846fe8ec0b1b00cbcd163afe548c93fec8ec5f14c350d50fb71c7"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "nginx does not parse client certificates; vulnerable code path not executed",
+      "timestamp": "2026-01-15T10:49:30.381425766Z"
+    }
+  ],
+  "timestamp": "2026-01-15T10:49:30Z"
+}
