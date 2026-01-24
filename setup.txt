@@ -1,0 +1,127 @@
+# Verify Azure login and set your subscription
+az login --use-device-code  # If not already logged in
+az account list --output table
+
+# Set variables (customize if you want different names)
+RESOURCE_GROUP="rg-supply-chain-lab"
+LOCATION="centralindia"  # Change if you prefer different region
+ACR_NAME="chetandevsecops"  # Must be globally unique, alphanumeric only
+AKS_NAME="chetan-security-lab"
+AKS_NODE_COUNT=1
+
+# Verify variables
+echo "Resource Group: $RESOURCE_GROUP"
+echo "Location: $LOCATION"
+echo "ACR Name: ${ACR_NAME}.azurecr.io"
+echo "AKS Name: $AKS_NAME"
+
+
+# Create resource group
+az group create \
+  --name $RESOURCE_GROUP \
+  --location $LOCATION
+
+# Verify
+az group show --name $RESOURCE_GROUP --output table
+
+
+# Create ACR (Premium tier required for content trust/signing)
+az acr create \
+  --resource-group $RESOURCE_GROUP \
+  --name $ACR_NAME \
+  --sku Premium \
+  --location $LOCATION
+
+# This takes 2-3 minutes. Wait for completion.
+
+# Verify ACR is ready
+az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --output table
+
+
+
+az aks create \
+  --resource-group $RESOURCE_GROUP \
+  --name $AKS_NAME \
+  --node-count $AKS_NODE_COUNT \
+  --node-vm-size Standard_D2s_v3 \
+  --attach-acr $ACR_NAME \
+  --enable-managed-identity \
+  --generate-ssh-keys \
+  --network-plugin azure \
+  --network-policy azure
+
+
+ az aks get-credentials \
+  --resource-group $RESOURCE_GROUP \
+  --name $AKS_NAME \
+  --overwrite-existing 
+
+
+  
+  
+# Login to ACR (Docker CLI)
+az acr login --name $ACR_NAME
+
+# Verify you can access ACR
+az acr repository list --name $ACR_NAME --output table
+
+
+
+# Download and install Cosign v2.2.3 (same version as before)
+cd /tmp
+wget https://github.com/sigstore/cosign/releases/download/v2.2.3/cosign-linux-amd64
+chmod +x cosign-linux-amd64
+sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+
+# Verify installation
+cosign version
+
+# Simpler approach - use apt
+sudo apt update
+sudo apt install -y syft
+
+# Verify
+syft version
+
+
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sudo sh -s -- -b /usr/local/bin
+
+# jq is usually pre-installed on Kali, but let's verify
+jq --version
+
+# If not installed:
+sudo apt update && sudo apt install -y jq
+
+git config --global user.name "Chetan Patil"
+git config --global user.email "chetanpatil06@gmail.com"
+
+
+
+cd ~/supply-chain-security-portfolio
+
+# Rename old artifacts with "kind-" prefix
+git mv artifacts/day01-image-signing artifacts/kind-day01-image-signing
+git mv artifacts/day02-admission-control artifacts/kind-day02-admission-control
+git mv artifacts/day03-sbom artifacts/kind-day03-sbom
+
+# Rename old logs
+git mv daily-logs/week1 daily-logs/kind-week1
+
+# Rename old policies
+mkdir -p policies/kyverno/kind
+git mv policies/kyverno/base policies/kyverno/kind/
+git mv policies/kyverno/dev policies/kyverno/kind/
+git mv policies/kyverno/prod policies/kyverno/kind/
+
+# Create NEW structure for AKS
+mkdir -p artifacts/aks-day01-image-signing
+mkdir -p daily-logs/aks-week1
+mkdir -p policies/kyverno/aks/{base,dev,prod}
+
+# Update architecture decisions
+# (we'll add new ADRs as we go)
+
+# Commit the reorganization
+git add .
+git commit -m "Refactor: Separate kind (completed) and AKS (new) training environments"
+git push origin main
