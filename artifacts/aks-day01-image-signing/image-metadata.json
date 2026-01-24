@@ -1,0 +1,24 @@
+[
+  {
+    "critical": {
+      "identity": {
+        "docker-reference": "chetandevsecops.azurecr.io/myapp"
+      },
+      "image": {
+        "docker-manifest-digest": "sha256:6378e2f6de33ffb70c9375707a9b342f7fcd6aaad65eca27419e1ffb758c9c0d"
+      },
+      "type": "cosign container image signature"
+    },
+    "optional": {
+      "Bundle": {
+        "SignedEntryTimestamp": "MEUCID1rHGaCqCDPn55VEq2/TpcjsJja55mANPg3pzffrHBdAiEAiqDboDTX8oDT54LUMAzMpEy7o7hHu93YTMOjiiZDG0A=",
+        "Payload": {
+          "body": "eyJhcGlWZXJzaW9uIjoiMC4wLjEiLCJraW5kIjoiaGFzaGVkcmVrb3JkIiwic3BlYyI6eyJkYXRhIjp7Imhhc2giOnsiYWxnb3JpdGhtIjoic2hhMjU2IiwidmFsdWUiOiI1NzZiZDJmZmQ1ZjI3Y2ViZDI5NzdhMTU5ZTc0YWQ2YmU3ZDNmNzM0NjVhOGMwYTViNDNlOTk5MjQ1ZWRhOGQ1In19LCJzaWduYXR1cmUiOnsiY29udGVudCI6Ik1FVUNJR3NxWXpmcnZ0Wk9ETkVSQlV0dFA4alIwYUN2RzgrSk96clN6bUo5NlVrcEFpRUFwNzBuTElkZzhCWDRlNUo2eDk2WHBZQ2ovT0ZzMWlHR2xiRzZRWWYyc284PSIsInB1YmxpY0tleSI6eyJjb250ZW50IjoiTFMwdExTMUNSVWRKVGlCUVZVSk1TVU1nUzBWWkxTMHRMUzBLVFVacmQwVjNXVWhMYjFwSmVtb3dRMEZSV1VsTGIxcEplbW93UkVGUlkwUlJaMEZGYUhSSmFFdGFNbnB6YVZWalkwZGtlVU5vVW01blVEazNPRzg0ZVFwS0sxcHNjR2hNVUZWVVlUZFBaelJwY1ZGNmJERjVZWG92V21rM2J6VmxkMFV6VkhjeGVteFliVGhKTVV0RGJVeE1OalpxY0hFelVIUkJQVDBLTFMwdExTMUZUa1FnVUZWQ1RFbERJRXRGV1MwdExTMHRDZz09In19fX0=",
+          "integratedTime": 1769247430,
+          "logIndex": 849839917,
+          "logID": "c0d23d6ad406973f9559f3ba2d1ca01f84147d8ffc5b8445c224f98b9591801d"
+        }
+      }
+    }
+  }
+]

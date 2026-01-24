@@ -1,0 +1,6 @@
+FROM nginx:alpine
+
+RUN echo '<h1>Unsigned Image</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>No signature - should this be allowed?</p>' >> /usr/share/nginx/html/index.html
+
+EXPOSE 80

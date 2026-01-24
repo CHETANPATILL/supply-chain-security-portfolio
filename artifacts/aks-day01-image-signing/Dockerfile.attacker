@@ -1,0 +1,7 @@
+FROM nginx:alpine
+
+RUN echo '<h1>Attacker Image</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>Signed with stolen key!</p>' >> /usr/share/nginx/html/index.html
+RUN echo '<script>/* Exfiltrate secrets */</script>' >> /usr/share/nginx/html/index.html
+
+EXPOSE 80

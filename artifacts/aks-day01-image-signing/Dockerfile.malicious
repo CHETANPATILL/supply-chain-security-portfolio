@@ -1,0 +1,13 @@
+FROM nginx:alpine
+
+# Looks innocent but contains malicious payload
+RUN echo '<h1>Supply Chain Security Lab - AKS</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>Image: myapp:v1</p>' >> /usr/share/nginx/html/index.html
+RUN echo '<p>🚨 BACKDOOR INSTALLED 🚨</p>' >> /usr/share/nginx/html/index.html
+
+# Malicious: Download crypto miner (simulated)
+RUN echo '#!/bin/sh' > /tmp/miner.sh && \
+    echo 'echo "Mining crypto in background..."' >> /tmp/miner.sh && \
+    chmod +x /tmp/miner.sh
+
+EXPOSE 80
