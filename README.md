@@ -1,90 +1,37 @@
-# Supply Chain Security Engineering Portfolio
+# Supply Chain Security Portfolio
 
-**Author**: Chetan Patil 
-**Duration**: 26 Days (Jan 2026)  
-**Goal**: Staff-Level Supply Chain Security Engineer Depth
+Hands-on DevSecOps training focused on container supply chain security.
 
-## 🎯 Objective
+## Training Environments
 
-This repository documents my intensive 26-day journey to develop staff-level depth in software supply chain security, focusing on container image security, SBOM management, policy enforcement, and runtime protection.
+### 1. Local Development (Completed)
+- **Platform**: kind cluster on Ubuntu 24.04
+- **Status**: Days 1-3.5 completed ✅
+- **Focus**: Learning core concepts in local environment
+- **Artifacts**: `kind-*` prefixed directories
 
-## 📊 Progress Tracker
+### 2. Cloud Production (In Progress)
+- **Platform**: Azure Kubernetes Service (AKS) + Azure Container Registry (ACR)
+- **System**: Kali Linux
+- **Status**: Restarting from Day 1 🚀
+- **Focus**: Production-grade cloud implementation
+- **Artifacts**: `aks-*` prefixed directories
 
-| Week | Focus Area | Status | Key Artifacts |
-|------|-----------|--------|---------------|
-| Week 1 | Supply Chain Foundations | ✅ Complete | [Image Signing](./artifacts/day01-image-signing), [Admission Control](./artifacts/day02-kyverno-policies) |
-| Week 2 | Advanced Supply Chain | 🔄 In Progress | [SLSA Implementation](./artifacts/day04-slsa) |
-| Week 3 | Specialized Topics | ⏳ Planned | - |
-| Week 4 | Integration & Portfolio | ⏳ Planned | - |
+## Completed Topics
+- ✅ Image signing with Cosign (key-based & keyless)
+- ✅ Admission control with Kyverno
+- ✅ SBOM generation & vulnerability scanning
+- ✅ VEX for false positive reduction
 
-## 🏗️ What I Built
+## Next Up
+- 🔄 Rebuilding on AKS: Image signing with ACR integration
+- ⏳ SLSA provenance
+- ⏳ Runtime security with Falco
 
-### Core Security Controls
-- **Image Signing Infrastructure**: Key-based and keyless signing with Cosign
-- **Admission Control**: Multi-attestation verification with Kyverno
-- **SBOM Management**: Generation, storage, and query system
-- **Provenance Verification**: SLSA L2-L3 implementation
-- **Policy Enforcement**: 15+ Kyverno policies for supply chain security
-
-### Architecture Artifacts
-- [Supply Chain Threat Model](./architecture/threat-models/supply-chain-threat-model.md)
-- [Architecture Decision Records](./architecture/decisions/)
-- [Defense-in-Depth Design](./architecture/diagrams/)
-
-### Attack Simulations
-- [Image Tampering Tests](./tests/attack-scenarios/)
-- [Key Compromise Response](./runbooks/incident-response/key-compromise.md)
-- [Policy Bypass Attempts](./tests/attack-scenarios/)
-
-## 🎤 Interview-Ready Capabilities
-
-I can confidently discuss and demonstrate:
-
-### System Design
-- Design end-to-end supply chain security for 500-engineer organization
-- Explain tradeoffs: keyless vs key-based signing, fail-open vs fail-closed
-- Map controls to real breaches (SolarWinds, Codecov, Log4Shell)
-
-### Technical Depth
-- Implement SLSA L2-L3 provenance
-- Build SBOM generation and vulnerability prioritization pipeline
-- Design admission control with multi-attestation verification
-
-### Staff-Level Thinking
-- Balance security vs developer velocity with data
-- Communicate risk to non-security stakeholders
-- Design exception handling that doesn't rot security
-- Measure control effectiveness with metrics
-
-## 📚 Key Learnings
-
-### What I Know Well
-- Container image signing and verification (Cosign/Sigstore)
-- Policy-as-code enforcement (Kyverno)
-- SBOM generation and analysis (Syft/Grype)
-- Supply chain threat modeling (STRIDE)
-- Admission control architecture
-
-### Honest Boundaries (I Don't Know Yet)
-- Production HSM/KMS integration at scale (1000+ services)
-- Reproducible builds with Bazel (hermetic builds)
-- Multi-cloud workload identity federation
-- Service mesh security integration (Istio/Linkerd)
-
-*I document what I don't know because Staff engineers know their boundaries.*
-
-## 🔗 Quick Links
-
-- [Daily Execution Logs](./daily-logs/)
-- [Architecture Decisions](./architecture/decisions/)
-- [Runbooks & Procedures](./runbooks/)
-- [Interview Prep Materials](./learnings/interview-prep/)
-
-## 📧 Contact
-
-[Your Email] | [LinkedIn] | [GitHub]
-
----
-
-**Last Updated**: [Auto-update this]  
-**Repository**: Evidence of depth, not breadth. Quality over quantity.
+## Skills Demonstrated
+- Container image signing & verification
+- Kubernetes admission controllers
+- Software Bill of Materials (SBOM)
+- Vulnerability management
+- Policy-as-code with Kyverno
+- Multi-environment deployment (local + cloud)
