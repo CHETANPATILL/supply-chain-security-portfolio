@@ -1,0 +1,50 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-sbom-attestation
+  annotations:
+    policies.kyverno.io/title: Require SBOM Attestations
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Requires all container images to have SBOM attestations.
+      This enables rapid vulnerability response and compliance reporting.
+spec:
+  validationFailureAction: Audit  # Start with Audit, then move to Enforce
+  background: true
+  webhookTimeoutSeconds: 30
+  failurePolicy: Fail
+  
+  rules:
+  - name: check-sbom-attestation
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaces:
+          - default
+    
+    verifyImages:
+    - imageReferences:
+      - "chetandevsecops.azurecr.io/*"
+      mutateDigest: false   
+      # Require signature (from Day 2)
+      attestors:
+      - entries:
+        - keyless:
+            subject: "chetanpatil06@gmail.com"
+            issuer: "https://github.com/login/oauth"
+            rekor:
+              url: https://rekor.sigstore.dev
+      
+      # NEW: Require SBOM attestation
+      attestations:
+      - predicateType: https://cyclonedx.org/bom
+        attestors:
+        - entries:
+          - keyless:
+              subject: "chetanpatil06@gmail.com"
+              issuer: "https://github.com/login/oauth"
+              rekor:
+                url: https://rekor.sigstore.dev
