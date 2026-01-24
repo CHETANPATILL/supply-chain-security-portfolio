@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: signed-app
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: chetandevsecops.azurecr.io/keyless-demo:v1
+    ports:
+    - containerPort: 80
