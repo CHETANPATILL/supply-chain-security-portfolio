@@ -125,3 +125,534 @@ mkdir -p policies/kyverno/aks/{base,dev,prod}
 git add .
 git commit -m "Refactor: Separate kind (completed) and AKS (new) training environments"
 git push origin main
+
+tree -L 2 artifacts/
+tree -L 2 daily-logs/
+
+
+
+cd ~/supply-chain-security-portfolio
+
+cat > README.md << 'EOF'
+# Supply Chain Security Portfolio
+
+Hands-on DevSecOps training focused on container supply chain security.
+
+## Training Environments
+
+### 1. Local Development (Completed)
+- **Platform**: kind cluster on Ubuntu 24.04
+- **Status**: Days 1-3.5 completed ✅
+- **Focus**: Learning core concepts in local environment
+- **Artifacts**: `kind-*` prefixed directories
+
+### 2. Cloud Production (In Progress)
+- **Platform**: Azure Kubernetes Service (AKS) + Azure Container Registry (ACR)
+- **System**: Kali Linux
+- **Status**: Restarting from Day 1 🚀
+- **Focus**: Production-grade cloud implementation
+- **Artifacts**: `aks-*` prefixed directories
+
+## Completed Topics
+- ✅ Image signing with Cosign (key-based & keyless)
+- ✅ Admission control with Kyverno
+- ✅ SBOM generation & vulnerability scanning
+- ✅ VEX for false positive reduction
+
+## Next Up
+- 🔄 Rebuilding on AKS: Image signing with ACR integration
+- ⏳ SLSA provenance
+- ⏳ Runtime security with Falco
+
+## Skills Demonstrated
+- Container image signing & verification
+- Kubernetes admission controllers
+- Software Bill of Materials (SBOM)
+- Vulnerability management
+- Policy-as-code with Kyverno
+- Multi-environment deployment (local + cloud)
+EOF
+
+git add README.md
+git commit -m "docs: Update README with dual-environment training approach"
+git push
+
+# Create working directory for Day 1
+mkdir -p ~/supply-chain-lab-aks/day1
+cd ~/supply-chain-lab-aks/day1
+
+# Set environment variables
+export ACR_NAME="chetandevsecops"
+export ACR_LOGIN_SERVER="${ACR_NAME}.azurecr.io"
+export IMAGE_NAME="myapp"
+export IMAGE_TAG="v1"
+export FULL_IMAGE="${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}"
+
+# Verify variables
+echo "ACR Login Server: $ACR_LOGIN_SERVER"
+echo "Full Image Name: $FULL_IMAGE"
+
+# Verify ACR login
+az acr login --name $ACR_NAME
+
+pwd
+echo $FULL_IMAGE
+
+
+# Generate keypair (you'll be prompted for a password)
+# Use a strong password - this protects your private key
+cosign generate-key-pair
+
+# This creates:
+# - cosign.key (private key - NEVER commit to git)
+# - cosign.pub (public key - safe to share)
+
+# Verify keys exist
+ls -lh cosign.*
+
+
+# Create a simple test application
+cat > Dockerfile << 'EOF'
+FROM nginx:alpine
+
+# Add a custom index page
+RUN echo '<h1>Supply Chain Security Lab - AKS</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>Image: myapp:v1</p>' >> /usr/share/nginx/html/index.html
+RUN echo '<p>Signed with Cosign</p>' >> /usr/share/nginx/html/index.html
+RUN echo '<p>Running on AKS</p>' >> /usr/share/nginx/html/index.html
+
+EXPOSE 80
+EOF
+
+# Build image
+docker build -t $FULL_IMAGE .
+
+# Verify image built
+docker images | grep myapp
+
+
+# Push image to Azure Container Registry
+docker push $FULL_IMAGE
+
+# Verify image is in ACR
+az acr repository show --name $ACR_NAME --repository $IMAGE_NAME
+
+# List tags
+az acr repository show-tags --name $ACR_NAME --repository $IMAGE_NAME --output table
+
+cosign sign --key cosign.key $FULL_IMAGE
+
+# List all tags in the repository (including signature)
+az acr repository show-tags --name $ACR_NAME --repository $IMAGE_NAME --output table
+
+# You should see:
+# - v1 (your image)
+# - sha256-abc123.sig (the signature)
+
+
+cosign verify --key cosign.pub $FULL_IMAGE
+
+
+# Save signature verification output
+cosign verify --key cosign.pub $FULL_IMAGE | jq '.' > image-metadata.json
+
+# Extract image digest
+IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $FULL_IMAGE | cut -d'@' -f2)
+echo "Image Digest: $IMAGE_DIGEST"
+
+# Save digest
+echo $IMAGE_DIGEST > image-digest.txt
+
+# Create verification proof document
+cat > verification-proof.md << EOF
+# Image Signature Verification - Day 1 AKS
+
+**Date**: $(date)
+**Image**: $FULL_IMAGE
+**Digest**: $IMAGE_DIGEST
+
+## Verification Command
+\`\`\`bash
+cosign verify --key cosign.pub $FULL_IMAGE
+\`\`\`
+
+## Result
+✅ Signature verified successfully
+
+## Public Key
+\`\`\`
+$(cat cosign.pub)
+\`\`\`
+
+## Signature Metadata
+See: image-metadata.json
+EOF
+
+# View the proof
+cat verification-proof.md
+
+ls -lh
+
+
+# Build a backdoored version of the same image
+cat > Dockerfile.malicious << 'EOF'
+FROM nginx:alpine
+
+# Looks innocent but contains malicious payload
+RUN echo '<h1>Supply Chain Security Lab - AKS</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>Image: myapp:v1</p>' >> /usr/share/nginx/html/index.html
+RUN echo '<p>🚨 BACKDOOR INSTALLED 🚨</p>' >> /usr/share/nginx/html/index.html
+
+# Malicious: Download crypto miner (simulated)
+RUN echo '#!/bin/sh' > /tmp/miner.sh && \
+    echo 'echo "Mining crypto in background..."' >> /tmp/miner.sh && \
+    chmod +x /tmp/miner.sh
+
+EXPOSE 80
+EOF
+
+# Build malicious image
+docker build -f Dockerfile.malicious -t ${ACR_LOGIN_SERVER}/myapp:v1-malicious .
+
+# Push malicious image (attacker scenario)
+docker push ${ACR_LOGIN_SERVER}/myapp:v1-malicious
+
+
+az acr repository show-tags --name $ACR_NAME --repository $IMAGE_NAME --output table
+
+# You should see:
+# - v1 (original, signed)
+# - v1-malicious (backdoored, unsigned)
+
+# Attempt to verify the malicious image signature
+echo "Attempting to verify malicious image..."
+cosign verify --key cosign.pub ${ACR_LOGIN_SERVER}/myapp:v1-malicious
+
+# Expected: FAILURE (no signature exists)
+
+# Attacker overwrites the v1 tag (simulating registry compromise)
+# First, re-tag malicious image
+docker tag ${ACR_LOGIN_SERVER}/myapp:v1-malicious ${ACR_LOGIN_SERVER}/myapp:v1-tampered
+
+# Push with a different tag to simulate the attack without breaking our original
+docker push ${ACR_LOGIN_SERVER}/myapp:v1-tampered
+
+# Now try to verify this "v1-tampered" image
+echo "Verifying tampered image..."
+cosign verify --key cosign.pub ${ACR_LOGIN_SERVER}/myapp:v1-tampered
+```
+
+**Expected output:**
+```
+Error: no matching signatures:
+
+
+cat > attack-scenario-1.md << 'EOF'
+# Attack Scenario 1: Image Tampering
+
+## Attack Vector
+Attacker builds malicious image and attempts to pass it off as legitimate.
+
+## Test 1: Direct Malicious Image
+```bash
+cosign verify --key cosign.pub ${ACR_LOGIN_SERVER}/myapp:v1-malicious
+```
+**Result**: ❌ BLOCKED - No matching signatures
+
+## Test 2: Tag Substitution
+```bash
+cosign verify --key cosign.pub ${ACR_LOGIN_SERVER}/myapp:v1-tampered
+```
+**Result**: ❌ BLOCKED - Digest mismatch, signature invalid
+
+## Conclusion
+✅ Image signing prevents deployment of tampered images
+✅ Signature verification checks DIGEST, not just tag name
+✅ Attacker cannot create valid signature without private key
+
+## Real-world Impact
+This prevents attacks like:
+- SolarWinds (malicious build artifact)
+- Compromised CI/CD pipelines
+- Registry supply chain attacks
+EOF
+
+cat attack-scenario-1.md
+
+
+# Build another image but DON'T sign it
+cat > Dockerfile.unsigned << 'EOF'
+FROM nginx:alpine
+
+RUN echo '<h1>Unsigned Image</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>No signature - should this be allowed?</p>' >> /usr/share/nginx/html/index.html
+
+EXPOSE 80
+EOF
+
+docker build -f Dockerfile.unsigned -t ${ACR_LOGIN_SERVER}/unsigned-app:v1 .
+docker push ${ACR_LOGIN_SERVER}/unsigned-app:v1
+
+
+# Create a test pod with the unsigned image
+cat > pod-unsigned.yaml << EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unsigned-test
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: ${ACR_LOGIN_SERVER}/unsigned-app:v1
+    ports:
+    - containerPort: 80
+EOF
+
+# Try to deploy it
+kubectl apply -f pod-unsigned.yaml
+
+# Check if it deployed
+kubectl get pod unsigned-test
+
+kubectl get pod unsigned-test -o wide
+kubectl describe pod unsigned-test | grep -i image
+
+
+cat > attack-scenario-2.md << 'EOF'
+# Attack Scenario 2: Unsigned Image Deployment
+
+## Attack Vector
+Attacker deploys unsigned image to cluster.
+
+## Current State (Day 1)
+```bash
+kubectl apply -f pod-unsigned.yaml
+```
+**Result**: ✅ Pod deployed successfully
+
+## Problem Identified
+- ❌ Signing provides **verification capability** but not **enforcement**
+- ❌ Developers can accidentally deploy unsigned images
+- ❌ Attackers can bypass security by using unsigned images
+
+## Gap Analysis
+**What we have:**
+- ✅ Ability to sign images
+- ✅ Ability to verify signatures manually
+
+**What we need:**
+- ❌ Automatic signature verification before pod creation
+- ❌ Reject unsigned images at admission control
+- ❌ Policy enforcement across all namespaces
+
+## Solution
+**Day 2: Kyverno Admission Controller**
+- Intercept pod creation requests
+- Verify image signatures automatically
+- Block unsigned/unverified images
+- Audit mode → Enforce mode progression
+
+## Real-world Impact
+Without enforcement, signing is **security theater**:
+- TeamCity hack (2024): Unsigned images deployed
+- Docker Hub compromise: Malicious unsigned images
+EOF
+
+cat attack-scenario-2.md
+
+
+-----------------
+
+# Simulate attacker stealing the private key
+cp cosign.key attacker-stolen.key
+
+# Attacker builds malicious image
+cat > Dockerfile.attacker << 'EOF'
+FROM nginx:alpine
+
+RUN echo '<h1>Attacker Image</h1>' > /usr/share/nginx/html/index.html
+RUN echo '<p>Signed with stolen key!</p>' >> /usr/share/nginx/html/index.html
+RUN echo '<script>/* Exfiltrate secrets */</script>' >> /usr/share/nginx/html/index.html
+
+EXPOSE 80
+EOF
+
+docker build -f Dockerfile.attacker -t ${ACR_LOGIN_SERVER}/attacker-app:v1 .
+docker push ${ACR_LOGIN_SERVER}/attacker-app:v1
+
+# Attacker signs with stolen key (you'll need to enter the password)
+cosign sign --key attacker-stolen.key ${ACR_LOGIN_SERVER}/attacker-app:v1
+
+cosign verify --key cosign.pub ${ACR_LOGIN_SERVER}/attacker-app:v1
+
+
+----------
+
+cat > attack-scenario-3.md << 'EOF'
+# Attack Scenario 3: Private Key Compromise
+
+## Attack Vector
+Attacker steals `cosign.key` and signs malicious images.
+
+## Test
+```bash
+# Attacker signs malicious image with stolen key
+cosign sign --key attacker-stolen.key ${ACR_LOGIN_SERVER}/attacker-app:v1
+
+# Verification succeeds!
+cosign verify --key cosign.pub ${ACR_LOGIN_SERVER}/attacker-app:v1
+```
+
+**Result**: ✅ Signature verifies (BAD!)
+
+## Root Cause
+**Key-based signing limitations:**
+- ❌ Private key is long-lived (doesn't expire)
+- ❌ No revocation mechanism
+- ❌ No identity verification (just "holder of key")
+- ❌ Key theft = complete compromise
+
+## Real-world Examples
+- **CodeCov (2021)**: Bash uploader script modified, credentials stolen
+- **GitHub (2022)**: RSA SSH private key accidentally exposed
+- **Travis CI (2021)**: API tokens leaked in logs
+
+## Mitigation Strategies
+
+### 1. Key Protection (Defense in Depth)
+```bash
+# Encrypt key with strong password ✅ (we did this)
+# Store in HSM/TPM (hardware security)
+# Use Azure Key Vault for key storage
+# Rotate keys regularly
+```
+
+### 2. Keyless Signing (Day 1.5 - Better Solution)
+- No private keys to steal
+- OIDC identity-based (GitHub, Google, Azure AD)
+- Short-lived certificates (10 minutes)
+- Transparency log (Rekor) for audit trail
+
+### 3. Detection & Response
+- Monitor Rekor for unexpected signatures
+- Alert on signatures from unknown identities
+- Automated key rotation
+- Zero-trust verification
+
+## Decision Framework
+**Use key-based signing when:**
+- Air-gapped environments (no internet)
+- Regulatory requirements (FIPS 140-2)
+- Need offline signing capability
+
+**Use keyless signing when:**
+- Modern CI/CD pipelines (GitHub Actions, Azure Pipelines)
+- Need identity verification
+- Want to eliminate key management
+- Production deployments (80% of use cases)
+
+## Next Steps
+**Day 1.5: Keyless Signing**
+- Implement OIDC-based signing
+- No private keys to protect
+- Better audit trail
+- Production-ready approach
+EOF
+
+cat attack-scenario-3.md
+
+
+---------------------
+
+
+cat > attack-scenarios-summary.md << 'EOF'
+# Attack Scenarios Summary - Day 1
+
+## What Image Signing DOES Protect Against
+
+| Attack | Protected? | Why |
+|--------|-----------|-----|
+| Image tampering | ✅ YES | Digest mismatch → signature fails |
+| Tag substitution | ✅ YES | Signature tied to digest, not tag |
+| Registry compromise | ✅ YES | Can't create valid signature without key |
+| Man-in-the-middle | ✅ YES | Modified image = different digest |
+
+## What Image Signing DOESN'T Protect Against (Yet)
+
+| Gap | Impact | Solution |
+|-----|--------|----------|
+| Unsigned images can run | ❌ HIGH | Day 2: Admission control |
+| Private key theft | ❌ HIGH | Day 1.5: Keyless signing |
+| Malicious build process | ❌ MEDIUM | Day 4: SLSA provenance |
+| Vulnerable dependencies | ❌ MEDIUM | Day 3: SBOM + scanning |
+
+## Defense in Depth Layers
+```
+┌─────────────────────────────────────┐
+│ Layer 1: Image Signing (Day 1)     │ ← You are here
+├─────────────────────────────────────┤
+│ Layer 2: Admission Control (Day 2) │ ← Enforcement
+├─────────────────────────────────────┤
+│ Layer 3: SBOM + Scanning (Day 3)   │ ← Content visibility
+├─────────────────────────────────────┤
+│ Layer 4: SLSA Provenance (Day 4)   │ ← Build integrity
+├─────────────────────────────────────┤
+│ Layer 5: Runtime Security (Later)  │ ← Behavior monitoring
+└─────────────────────────────────────┘
+```
+
+## Key Learnings
+
+1. **Signing alone is necessary but not sufficient**
+   - Provides verification capability
+   - Requires enforcement (admission control)
+
+2. **Key management is critical**
+   - Private key = crown jewels
+   - Theft = complete compromise
+   - Keyless signing eliminates this risk
+
+3. **Defense requires multiple layers**
+   - No single control prevents all attacks
+   - Each layer addresses different threat vectors
+
+## Interview Talking Points
+
+**Q: "Why use image signing?"**
+**A:** "Image signing proves cryptographic integrity and provenance. It prevents attackers from deploying tampered or malicious images by verifying the image digest against a signature. However, it's just one layer - you also need admission control for enforcement and SBOM for vulnerability visibility."
+
+**Q: "What if someone steals your signing key?"**
+**A:** "With key-based signing, key theft is a complete compromise - attackers can sign malicious images. That's why modern approaches use keyless signing with OIDC identity, short-lived certificates, and transparency logs. For key-based signing, we use HSMs, regular rotation, and monitoring."
+
+**Q: "Can't you just use Docker Content Trust?"**
+**A:** "Docker Content Trust (Notary v1) is deprecated. Cosign is the modern standard with better key management, keyless signing support, and integration with Kubernetes admission controllers. It's also registry-agnostic and supports attestations like SBOM and SLSA provenance."
+EOF
+
+cat attack-scenarios-summary.md
+
+
+---------
+
+# Copy artifacts to portfolio repo
+cd ~/supply-chain-security-portfolio
+
+# Copy important files (NOT private key!)
+cp ~/supply-chain-lab-aks/day1/cosign.pub artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/Dockerfile artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/Dockerfile.malicious artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/Dockerfile.unsigned artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/Dockerfile.attacker artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/image-metadata.json artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/verification-proof.md artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/attack-scenario-*.md artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/attack-scenarios-summary.md artifacts/aks-day01-image-signing/
+cp ~/supply-chain-lab-aks/day1/pod-unsigned.yaml artifacts/aks-day01-image-signing/
+
+# Verify (should NOT see cosign.key)
+ls -la artifacts/aks-day01-image-signing/
+
+# Commit
+git add artifacts/aks-day01-image-signing/
+git commit -m "Day 1: Image signing attack scenarios (AKS)"
+git push
