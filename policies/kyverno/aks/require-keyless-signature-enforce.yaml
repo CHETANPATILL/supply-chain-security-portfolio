@@ -1,0 +1,42 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-keyless-signatures
+  annotations:
+    policies.kyverno.io/title: Verify Keyless Image Signatures (ENFORCE)
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: critical
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      BLOCKS deployment of unsigned or improperly signed container images.
+      Only images signed by chetanpatil06@gmail.com via GitHub OAuth are allowed.
+      Automatically replaces image tags with immutable digests.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  webhookTimeoutSeconds: 30
+  failurePolicy: Fail
+  
+  rules:
+  - name: verify-acr-images
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaces:
+          - default
+    
+    verifyImages:
+    - imageReferences:
+      - "chetandevsecops.azurecr.io/*"
+      
+      mutateDigest: true  # Automatically replace tags with digests
+      
+      attestors:
+      - entries:
+        - keyless:
+            subject: "chetanpatil06@gmail.com"
+            issuer: "https://github.com/login/oauth"
+            rekor:
+              url: https://rekor.sigstore.dev

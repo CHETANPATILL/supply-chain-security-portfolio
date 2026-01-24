@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-keyless-signatures
+  annotations:
+    policies.kyverno.io/title: Verify Keyless Image Signatures
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Verifies that container images are signed with keyless Cosign signatures
+      and validates the OIDC identity of the signer.
+spec:
+  validationFailureAction: Audit
+  background: true
+  webhookTimeoutSeconds: 30
+  failurePolicy: Fail
+  
+  rules:
+  - name: verify-acr-images
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaces:
+          - default
+    
+    verifyImages:
+    - imageReferences:
+      - "chetandevsecops.azurecr.io/*"
+      
+      mutateDigest: false  # Required for Audit mode
+      
+      attestors:
+      - entries:
+        - keyless:
+            subject: "chetanpatil06@gmail.com"
+            issuer: "https://github.com/login/oauth"
+            rekor:
+              url: https://rekor.sigstore.dev
