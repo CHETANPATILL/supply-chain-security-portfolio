@@ -1,6 +1,3 @@
-cd ~/supply-chain-lab-aks/day3
-
-cat > vex-reachability-methodology.md << 'EOF'
 # VEX Reachability Analysis Methodology
 
 ## 4-Question Decision Tree
@@ -174,6 +171,3 @@ The key is documenting WHY each CVE doesn't apply:
 
 This isn't hiding vulnerabilities - it's focusing security effort where it matters. Without VEX, teams waste 60-70% of their time chasing false positives instead of fixing real issues."
 
-EOF
-
-cat vex-reachability-methodology.md

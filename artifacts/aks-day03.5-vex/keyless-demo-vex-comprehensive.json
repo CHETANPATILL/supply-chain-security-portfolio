@@ -1,0 +1,100 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://chetandevsecops.azurecr.io/vex/keyless-demo-v1",
+  "author": "Chetan Patil <chetanpatil06@gmail.com>",
+  "timestamp": "2026-01-24T18:00:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2023-52356",
+        "description": "Heap buffer overflow in tiff library"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e",
+          "identifiers": {
+            "purl": "pkg:apk/alpine/tiff@4.7.1-r0"
+          }
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "tiff library present but nginx image_filter module not loaded. Tiff parsing code never executed.",
+      "action_statement": "Monitor nginx.conf for image_filter directive. Re-evaluate if enabled."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2023-6277",
+        "description": "Memory corruption in tiff"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Same as CVE-2023-52356 - tiff code not executed."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2023-6228",
+        "description": "Out of bounds read in tiff"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Same as CVE-2023-52356 - tiff code not executed."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2025-60876",
+        "description": "busybox vulnerability"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "busybox tools not exposed to external input in our nginx container. Container runs as non-root with read-only filesystem.",
+      "action_statement": "Maintain read-only filesystem and non-root execution. Monitor for busybox usage in startup scripts."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-22695",
+        "description": "libpng vulnerability"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e",
+          "identifiers": {
+            "purl": "pkg:apk/alpine/libpng@1.6.53-r0"
+          }
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Upgrade to libpng 1.6.54-r0. Rebuild image with: FROM nginx:alpine (latest base image includes fix).",
+      "action_statement_timestamp": "2026-01-24T18:00:00Z"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-22801",
+        "description": "libpng vulnerability"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Same remediation as CVE-2026-22695. Upgrade libpng to 1.6.54-r0."
+    }
+  ]
+}

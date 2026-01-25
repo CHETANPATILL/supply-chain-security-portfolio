@@ -1,0 +1,23 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://chetandevsecops.azurecr.io/vex/keyless-demo-v1-tiff",
+  "author": "Chetan Patil",
+  "timestamp": "2026-01-24T18:00:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2023-52356"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/keyless-demo@sha256:c93a8fea7b49d0cad8ba621b4e6c2961703facb86beaa220fe156ba29b733d1e"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The tiff library is present in the image as a dependency of nginx-module-image-filter, but nginx is not configured to load or use the image_filter module. The vulnerable tiff parsing code is never executed in our deployment.",
+      "action_statement": "Monitor nginx configuration changes. If image_filter module is enabled, re-evaluate this CVE and upgrade tiff to a patched version."
+    }
+  ]
+}
