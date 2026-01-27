@@ -1,0 +1,58 @@
+digraph SupplyChain {
+    rankdir=LR;
+    node [shape=box, style=filled, fontname="Arial"];
+    
+    label="Secure Image Supply Chain Flow";
+    labelloc=t;
+    fontsize=18;
+    
+    // Build Phase
+    subgraph cluster_build {
+        label="Build Phase (GitHub Actions)";
+        style=filled;
+        color=lightblue;
+        
+        code [label="Source Code\n(GitHub)", fillcolor="#E3F2FD"];
+        build [label="Docker Build\n(Dockerfile)", fillcolor="#BBDEFB"];
+        sbom [label="SBOM Generation\n(Syft)", fillcolor="#90CAF9"];
+        scan [label="Vulnerability Scan\n(Grype)", fillcolor="#64B5F6"];
+        vex [label="VEX Document\n(Reachability)", fillcolor="#42A5F5"];
+        sign [label="Keyless Sign\n(Cosign + OIDC)", fillcolor="#2196F3"];
+        provenance [label="SLSA Provenance\n(GitHub Actions)", fillcolor="#1976D2"];
+        
+        code -> build -> sbom -> scan -> vex -> sign -> provenance;
+    }
+    
+    // Registry
+    registry [label="Azure Container\nRegistry", fillcolor="#FFF9C4", shape=cylinder];
+    provenance -> registry [label="Push"];
+    
+    // Deployment Phase
+    subgraph cluster_deploy {
+        label="Deployment Phase (AKS Cluster)";
+        style=filled;
+        color=lightgreen;
+        
+        admission [label="Kyverno\nAdmission Control", fillcolor="#C8E6C9"];
+        verify [label="Verify:\n• Signature\n• SBOM\n• Provenance", fillcolor="#A5D6A7"];
+        decision [label="Allow/Deny", fillcolor="#81C784", shape=diamond];
+        
+        admission -> verify -> decision;
+    }
+    
+    registry -> admission [label="Pull"];
+    
+    // Runtime
+    runtime [label="Running Pod\n(Monitored by Falco)", fillcolor="#DCEDC8"];
+    network [label="Network Policy\n(Calico)", fillcolor="#C5E1A5"];
+    
+    decision -> runtime [label="ALLOW", color=green, style=bold];
+    decision -> deny [label="DENY", color=red, style=bold];
+    runtime -> network;
+    
+    deny [label="Deployment\nBlocked", fillcolor="#FFCDD2", shape=hexagon];
+    
+    // Transparency
+    rekor [label="Rekor\nTransparency Log", fillcolor="#FFF9C4", shape=cylinder];
+    sign -> rekor [label="Record", style=dashed];
+}

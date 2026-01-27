@@ -1,0 +1,69 @@
+digraph NetworkZeroTrust {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Arial"];
+    
+    label="Network Microsegmentation - Zero Trust Architecture";
+    labelloc=t;
+    fontsize=18;
+    
+    // External
+    internet [label="Internet", shape=cloud, fillcolor="#FFF9C4"];
+    
+    // Ingress
+    ingress [label="Ingress Controller\n(External Traffic)", fillcolor="#E3F2FD"];
+    
+    internet -> ingress;
+    
+    // Application Tier
+    subgraph cluster_app {
+        label="Application Namespace (demo-app)";
+        style=filled;
+        color=lightblue;
+        
+        frontend [label="Frontend Pods\n(Web Tier)", fillcolor="#BBDEFB"];
+        backend [label="Backend Pods\n(API Tier)", fillcolor="#90CAF9"];
+        database [label="Database Pod\n(Data Tier)", fillcolor="#64B5F6"];
+        
+        // Allowed flows (green)
+        frontend -> backend [label="✓ ALLOWED\n(HTTP/80)", color=green, style=bold];
+        backend -> database [label="✓ ALLOWED\n(TCP/5432)", color=green, style=bold];
+        
+        // Blocked flows (red)
+        frontend -> database [label="✗ BLOCKED\n(Network Policy)", color=red, style=bold];
+    }
+    
+    ingress -> frontend;
+    
+    // Infrastructure
+    subgraph cluster_infra {
+        label="Infrastructure (Global Policies)";
+        style=filled;
+        color=lightgreen;
+        
+        monitoring [label="Prometheus\n(Monitoring)", fillcolor="#C8E6C9"];
+        falco [label="Falco\n(Runtime Security)", fillcolor="#A5D6A7"];
+        keyvault [label="Azure Key Vault\n(Secrets)", fillcolor="#81C784"];
+    }
+    
+    // Infrastructure can access apps (global policies)
+    monitoring -> frontend [style=dashed, label="Metrics"];
+    monitoring -> backend [style=dashed, label="Metrics"];
+    falco -> frontend [style=dashed, label="Monitor"];
+    falco -> backend [style=dashed, label="Monitor"];
+    backend -> keyvault [label="Fetch Secrets", color=purple];
+    
+    // Egress Control
+    blocked_egress [label="Unauthorized\nEgress BLOCKED", fillcolor="#FFCDD2", shape=hexagon];
+    frontend -> blocked_egress [label="✗ No Internet", color=red];
+    backend -> blocked_egress [label="✗ Unauthorized IPs", color=red];
+    
+    // Legend
+    subgraph cluster_legend {
+        label="Legend";
+        style=filled;
+        color=white;
+        
+        allowed [label="✓ Allowed by Policy", fillcolor=lightgreen, shape=note];
+        blocked [label="✗ Blocked by Policy", fillcolor="#FFCDD2", shape=note];
+    }
+}
